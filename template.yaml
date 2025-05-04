@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Memora AI - Context Ingestion Stack
+
+Resources:
+  ContextIngestionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: MemoraContextIngestion
+      Runtime: python3.11
+      Handler: app.lambda_handler
+      CodeUri: context_ingestion/
+      Timeout: 120
+      MemorySize: 256
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - S3WritePolicy:
+            BucketName: !Ref IngestionBucket
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref IngestionBucket
+          S3_PREFIX: cleaned
+
+  IngestionBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: memora-ai-ingestion-bucket
