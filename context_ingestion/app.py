@@ -7,6 +7,11 @@ def lambda_handler(event, context):
     confluence_base_url = event.get("confluence_base_url")
     confluence_email = event.get("email")
     confluence_token = event.get("token")
+
+#     confluence_base_url = "https://ashipj.atlassian.net/wiki"
+#     confluence_email = "ashipj@gmail.com"
+#     confluence_token = "ATATT3xFfGF0LmaXpcaOGGGlLWTQhVKZBUn0fnCdiZZNIuUpe91sy2WbKV40AbXSnDNZcfnu45-8fCWBGEQ-4dLsIZl0HrmrzLcS7HRwsU9lgxMc3F1hckIUS4dEDO7Vs5ukEC9O-ykJ79r0Gbmik4PkFKE0zVkIcoVfq6qzg4TzFIV5jTApoRc=685917CA"
+
     s3_bucket = os.environ.get("S3_BUCKET")
     s3_prefix = os.environ.get("S3_PREFIX")
 

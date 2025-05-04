@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+īAWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: Memora AI - Context Ingestion Stack
 
@@ -19,7 +19,7 @@ Resources:
       Environment:
         Variables:
           S3_BUCKET: !Ref IngestionBucket
-          S3_PREFIX: cleaned
+          S3_PREFIX: cleaned-data
 
   IngestionBucket:
     Type: AWS::S3::Bucket
