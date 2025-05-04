@@ -15,13 +15,13 @@ Resources:
       Policies:
         - AWSLambdaBasicExecutionRole
         - S3WritePolicy:
-            BucketName: !Ref IngestionBucket
+            BucketName: memora-ai-ingestion-bucket
       Environment:
         Variables:
-          S3_BUCKET: !Ref IngestionBucket
+          S3_BUCKET: memora-ai-ingestion-bucket
           S3_PREFIX: cleaned-data
 
-  IngestionBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: ashipj-memora-ai
+  # IngestionBucket:
+  #   Type: AWS::S3::Bucket
+  #   Properties:
+  #     BucketName: memora-ai-ingestion-bucket
