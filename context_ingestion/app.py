@@ -9,12 +9,12 @@ def lambda_handler(event, context):
     s3_bucket = os.environ.get("S3_BUCKET")
     s3_prefix = os.environ.get("S3_PREFIX")
 
-    confluence_token = event.get("token")
+    confluence_token = os.environ.get("CONFLUENCE_TOKEN")
     
     pages = get_all_pages(confluence_base_url, confluence_email, confluence_token)
-    chunk_and_store(pages, s3_bucket, s3_prefix)
+    # chunk_and_store(pages, s3_bucket, s3_prefix)
 
     return {
         "statusCode": 200,
-        "body": json.dumps(f"Ingested {len(pages)} pages into S3 for Bedrock KB.")
+        "body": json.dumps(f"Ingested {len(pages)} pages into S3 for Bedrock KB. token: {confluence_token}")
     }
