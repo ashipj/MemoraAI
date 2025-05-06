@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: Memora AI - Context Ingestion Stack
+Description: Memora AI - Ingestion and Processing Stack
 
 Resources:
   ContextIngestionFunction:
@@ -34,3 +34,62 @@ Resources:
   #   Type: AWS::S3::Bucket
   #   Properties:
   #     BucketName: memora-ai-ingestion-bucket
+
+  # EmailReaderFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     FunctionName: email-reader-function
+  #     Handler: handler.lambda_handler
+  #     Runtime: python3.11
+  #     CodeUri: lambda_email_reader/
+  #     Description: Reads project-related emails via Gmail API
+  #     Timeout: 30
+  #     MemorySize: 256
+  #     Environment:
+  #       Variables:
+  #         GMAIL_ACCESS_TOKEN: !Ref GmailAccessToken
+  #         GMAIL_REFRESH_TOKEN: !Ref GmailRefreshToken
+  #         GMAIL_CLIENT_ID: !Ref GmailClientId
+  #         GMAIL_CLIENT_SECRET: !Ref GmailClientSecret
+  #     Policies:
+  #       - AWSLambdaBasicExecutionRole
+
+  ConfluenceWriterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: confluence-writer-function
+      Handler: handler.lambda_handler
+      Runtime: python3.11
+      CodeUri: lambda_confluence_writer/
+      Description: Creates or updates Confluence pages with summarized emails
+      Timeout: 3600
+      MemorySize: 512
+      Environment:
+        Variables:
+          CONFLUENCE_URL: https://ashipj.atlassian.net/wiki
+          CONFLUENCE_USER: ashipj@gmail.com
+          CONFLUENCE_TOKEN: '{{resolve:secretsmanager:memora/email-confluence-secrets:SecretString:CONFLUENCE_TOKEN}}'
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action: secretsmanager:GetSecretValue
+              Resource: arn:aws:secretsmanager:us-east-1:685148108183:secret:memora/*
+
+# Parameters:
+#   GmailAccessToken:
+#     Type: String
+#   GmailRefreshToken:
+#     Type: String
+#   GmailClientId:
+#     Type: String
+#   GmailClientSecret:
+#     Type: String
+#   ConfluenceUrl:
+#     Type: String
+#   ConfluenceUser:
+#     Type: String
+#   ConfluenceToken:
+#     Type: String
+
