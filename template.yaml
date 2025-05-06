@@ -20,6 +20,8 @@ Resources:
         Variables:
           S3_BUCKET: memora-ai-ingestion-bucket
           S3_PREFIX: cleaned-data
+          confluence_base_url: https://ashipj.atlassian.net/wiki
+          confluence_email: ashipj@gmail.com
 
   # IngestionBucket:
   #   Type: AWS::S3::Bucket

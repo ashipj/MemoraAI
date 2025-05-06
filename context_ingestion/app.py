@@ -4,17 +4,13 @@ from confluence_client import get_all_pages
 from kb_formatter import chunk_and_store
 
 def lambda_handler(event, context):
-    confluence_base_url = event.get("confluence_base_url")
-    confluence_email = event.get("email")
-    confluence_token = event.get("token")
-
-#     confluence_base_url = "https://ashipj.atlassian.net/wiki"
-#     confluence_email = "ashipj@gmail.com"
-#     confluence_token = "ATATT3xFfGF0LmaXpcaOGGGlLWTQhVKZBUn0fnCdiZZNIuUpe91sy2WbKV40AbXSnDNZcfnu45-8fCWBGEQ-4dLsIZl0HrmrzLcS7HRwsU9lgxMc3F1hckIUS4dEDO7Vs5ukEC9O-ykJ79r0Gbmik4PkFKE0zVkIcoVfq6qzg4TzFIV5jTApoRc=685917CA"
-
+    confluence_base_url = os.environ.get("confluence_base_url")
+    confluence_email = os.environ.get("email")
     s3_bucket = os.environ.get("S3_BUCKET")
     s3_prefix = os.environ.get("S3_PREFIX")
 
+    confluence_token = event.get("token")
+    
     pages = get_all_pages(confluence_base_url, confluence_email, confluence_token)
     chunk_and_store(pages, s3_bucket, s3_prefix)
 
