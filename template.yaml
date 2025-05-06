@@ -2,16 +2,19 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: Memora AI - Ingestion and Processing Stack
 
+Globals:
+  Function:
+    Timeout: 900
+    Runtime: python3.11
+    MemorySize: 512
+
 Resources:
   ContextIngestionFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: MemoraContextIngestion
-      Runtime: python3.11
       Handler: app.lambda_handler
       CodeUri: context_ingestion/
-      Timeout: 120
-      MemorySize: 256
       Policies:
         - AWSLambdaBasicExecutionRole
         - S3WritePolicy:
@@ -35,35 +38,15 @@ Resources:
   #   Properties:
   #     BucketName: memora-ai-ingestion-bucket
 
-  # EmailReaderFunction:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     FunctionName: email-reader-function
-  #     Handler: handler.lambda_handler
-  #     Runtime: python3.11
-  #     CodeUri: lambda_email_reader/
-  #     Description: Reads project-related emails via Gmail API
-  #     Timeout: 30
-  #     MemorySize: 256
-  #     Environment:
-  #       Variables:
-  #         GMAIL_ACCESS_TOKEN: !Ref GmailAccessToken
-  #         GMAIL_REFRESH_TOKEN: !Ref GmailRefreshToken
-  #         GMAIL_CLIENT_ID: !Ref GmailClientId
-  #         GMAIL_CLIENT_SECRET: !Ref GmailClientSecret
-  #     Policies:
-  #       - AWSLambdaBasicExecutionRole
+
 
   ConfluenceWriterFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: confluence-writer-function
       Handler: handler.lambda_handler
-      Runtime: python3.11
       CodeUri: lambda_confluence_writer/
       Description: Creates or updates Confluence pages with summarized emails
-      Timeout: 900
-      MemorySize: 512
       Environment:
         Variables:
           CONFLUENCE_URL: https://ashipj.atlassian.net/wiki
@@ -77,19 +60,62 @@ Resources:
               Action: secretsmanager:GetSecretValue
               Resource: arn:aws:secretsmanager:us-east-1:685148108183:secret:memora/*
 
-# Parameters:
-#   GmailAccessToken:
-#     Type: String
-#   GmailRefreshToken:
-#     Type: String
-#   GmailClientId:
-#     Type: String
-#   GmailClientSecret:
-#     Type: String
-#   ConfluenceUrl:
-#     Type: String
-#   ConfluenceUser:
-#     Type: String
-#   ConfluenceToken:
-#     Type: String
+
+
+
+
+
+
+  GmailReaderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: email_reader.lambda_handler
+      CodeUri: email_reader/
+      Environment:
+        Variables:
+          DDB_TABLE_NAME: EmailStorage
+          ACCESS_TOKEN: '{{resolve:secretsmanager:memora/email:SecretString:ACCESS_TOKEN}}'
+          REFRESH_TOKEN: '{{resolve:secretsmanager:memora/email:SecretString:REFRESH_TOKEN}}'
+          CLIENT_ID: '{{resolve:secretsmanager:memora/email:SecretString:CLIENT_ID}}'
+          CLIENT_SECRET: '{{resolve:secretsmanager:memora/email:SecretString:CLIENT_SECRET}}'
+      Events:
+        ScheduledTrigger:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 hour)
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: EmailStorage
+
+  EmailStorage:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: EmailStorage
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: threadId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      GlobalSecondaryIndexes:
+        - IndexName: threadId-index
+          KeySchema:
+            - AttributeName: threadId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+
+Outputs:
+  GmailReaderFunction:
+    Description: Lambda for reading Gmail emails
+    Value: !GetAtt GmailReaderFunction.Arn
+  EmailStorageTable:
+    Description: DynamoDB table for storing emails
+    Value: !Ref EmailStorage
+
+
 
