@@ -62,7 +62,7 @@ Resources:
       Runtime: python3.11
       CodeUri: lambda_confluence_writer/
       Description: Creates or updates Confluence pages with summarized emails
-      Timeout: 3600
+      Timeout: 900
       MemorySize: 512
       Environment:
         Variables:
