@@ -31,13 +31,6 @@ Resources:
           confluence_base_url: https://ashipj.atlassian.net/wiki
           confluence_email: ashipj@gmail.com
           CONFLUENCE_TOKEN: '{{resolve:secretsmanager:memora/email-confluence-secrets:SecretString:CONFLUENCE_TOKEN}}'
-          # GMAIL_CLIENT_ID: '{{resolve:secretsmanager:memora/email-confluence-secrets:SecretString:GMAIL_CLIENT_ID}}'
-
-  # IngestionBucket:
-  #   Type: AWS::S3::Bucket
-  #   Properties:
-  #     BucketName: memora-ai-ingestion-bucket
-
 
 
   ConfluenceWriterFunction:
@@ -59,11 +52,6 @@ Resources:
             - Effect: Allow
               Action: secretsmanager:GetSecretValue
               Resource: arn:aws:secretsmanager:us-east-1:685148108183:secret:memora/*
-
-
-
-
-
 
 
   GmailReaderFunction:
@@ -107,7 +95,28 @@ Resources:
               KeyType: HASH
           Projection:
             ProjectionType: ALL
-
+            
+  EmailOrchestratorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: MemoraEmailOrchestrator
+      Handler: app.lambda_handler
+      CodeUri: email_orchestrator/
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - SecretsManagerReadWrite
+        - DynamoDBCrudPolicy:
+            TableName: EmailStorage
+        - Statement:
+          - Effect: Allow
+            Action:
+              - bedrock:InvokeAgent
+            Resource: "*"
+      Environment:
+        Variables:
+          DDB_TABLE_NAME: EmailStorage
+          AGENT_ID: GCUHPGWEWO
+          AGENT_ALIAS_ID: 60HGQN0VKA
 
 Outputs:
   GmailReaderFunction:
@@ -116,6 +125,5 @@ Outputs:
   EmailStorageTable:
     Description: DynamoDB table for storing emails
     Value: !Ref EmailStorage
-
 
 
