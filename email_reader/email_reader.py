@@ -21,7 +21,7 @@ def lambda_handler(event, context):
         subject = next((h['value'] for h in headers if h['name'] == 'Subject'), '')
         from_addr = next((h['value'] for h in headers if h['name'] == 'From'), '')
         date = next((h['value'] for h in headers if h['name'] == 'Date'), '')
-        snippet = msg.get('snippet', '')
+        body = get_email_body(msg.get('payload', {}))
 
         item = {
             'id': msg['id'],
@@ -29,7 +29,7 @@ def lambda_handler(event, context):
             'subject': subject,
             'fromAddress': from_addr,
             'receivedDateTime': date,
-            'bodyPreview': snippet,
+            'bodyPreview': body,
             'processed': False
         }
         table.put_item(Item=item)
@@ -59,3 +59,18 @@ def fetch_recent_emails(service):
     result = service.users().messages().list(userId='me', q=query, maxResults=50).execute()
     return result.get('messages', [])
 
+# Extract email body from the payload
+# Handles both multipart and single-part emails
+def get_email_body(payload):
+    parts = payload.get('parts', [])
+    if parts:
+        for part in parts:
+            if part.get('mimeType') == 'text/plain':
+                data = part.get('body', {}).get('data', '')
+                return base64.urlsafe_b64decode(data).decode('utf-8', errors='ignore')
+    else:
+        # For single-part emails
+        body_data = payload.get('body', {}).get('data', '')
+        if body_data:
+            return base64.urlsafe_b64decode(body_data).decode('utf-8', errors='ignore')
+    return ''
