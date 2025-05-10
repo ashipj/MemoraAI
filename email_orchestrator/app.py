@@ -2,6 +2,7 @@ import json
 import boto3
 import logging
 from boto3.dynamodb.conditions import Attr, Key
+from datetime import datetime
 
 # Configure logging
 logger = logging.getLogger()
@@ -12,7 +13,9 @@ table = dynamodb.Table('EmailStorage')
 
 bedrock_runtime = boto3.client("bedrock-agent-runtime")
 AGENT_ID = "GCUHPGWEWO"
-AGENT_ALIAS_ID = "60HGQN0VKA"
+# AGENT_ALIAS_ID = "60HGQN0VKA" Cloude sonnet
+# AGENT_ALIAS_ID = "9ZSGMXEBKU"  # Nova lite
+AGENT_ALIAS_ID = "A98JF2T472"  # Claude 3.5 Haiku
 
 def lambda_handler(event, context):
     logger.info("Starting email thread summarization process.")
@@ -25,8 +28,9 @@ def lambda_handler(event, context):
     for thread_id in thread_ids:
         logger.info(f"Processing threadId: {thread_id}")
         thread_emails = get_emails_by_thread(thread_id)
-        thread_emails.sort(key=lambda e: e['timestamp'])
-        full_thread_text = "\n\n".join(email.get('body', '') for email in thread_emails)
+        # thread_emails.sort(key=lambda e: e['timestamp'])
+        thread_emails.sort(key=lambda e: parse_datetime_safe(e.get('receivedDateTime', '')))
+        full_thread_text = "\n\n".join(email.get('bodyPreview', '') for email in thread_emails)
         logger.info(f"full_thread_text: {full_thread_text}")
 
         if not full_thread_text.strip():
@@ -77,12 +81,19 @@ def invoke_bedrock_agent(email_thread_text):
             agentId=AGENT_ID,
             agentAliasId=AGENT_ALIAS_ID,
             sessionId="email-session",
-            input={
-                "inputText": f"Here is an email thread. Identify if this is relevant to any known project. If relevant, summarize it in a document-style format and update the Confluence page.\n\n{email_thread_text}"
-            }
+            inputText=(
+                f"Here is an email thread. Identify if this is relevant to any known project. "
+                f"If relevant, summarize it in a document-style format and update the Confluence page.\n\n"
+                f"{email_thread_text}"
+            )
         )
-        payload = response.get('completion', {})
-        return payload.get('textResponse', 'No text response from agent')
+        # Response is a streaming object; you must read the text chunks
+        full_response = ""
+        for event in response['completion']:
+            if "chunk" in event and "bytes" in event["chunk"]:
+                full_response += event["chunk"]["bytes"].decode("utf-8")
+
+        return full_response or "No text response from agent"
     except Exception as e:
         logger.error(f"Agent invocation failed: {str(e)}")
         return None
@@ -97,3 +108,10 @@ def mark_emails_processed(emails):
             )
         except Exception as e:
             logger.error(f"Failed to mark email {email['email_id']} as processed: {str(e)}")
+
+def parse_datetime_safe(date_str):
+    try:
+        return datetime.strptime(date_str, "%a, %d %b %Y %H:%M:%S %z")
+    except Exception as e:
+        logger.warning(f"Could not parse date: {date_str} — {str(e)}")
+        return datetime.min  # fallback for sorting
