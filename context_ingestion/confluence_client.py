@@ -1,4 +1,9 @@
 import requests
+import logging
+
+# Configure logging
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 def get_all_pages(base_url, email, token):
     auth = (email, token)
@@ -12,7 +17,11 @@ def get_all_pages(base_url, email, token):
         data = response.json()
         results = data.get("results", [])
 
+        logger.info(f"URL: {url}")
+        logger.info(f"Fetched {len(results)} pages from Confluence.")
+
         for page in results:
+            logger.info(f"Processing page: {page['title']}")
             pages.append({
                 "title": page["title"],
                 "body": page["body"]["storage"]["value"],
