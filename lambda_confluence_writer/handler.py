@@ -30,13 +30,12 @@ def lambda_handler(event, context):
         space = params.get('spaceKey')
         title = params.get('title')
         content = params.get('content')
-
-        # parent_id = payload.get("parentPageId")
+        parent_page_id = params.get('parentPageId')
 
         # Just log the inputs for now
         logger.info(f"Title: {title}")
         logger.info(f"Space: {space}")
-        # logger.info(f"Parent ID: {parent_id}")
+        logger.info(f"Parent ID: {parent_page_id}")
         logger.info(f"Content: {content}")
 
         # Check if page exists
@@ -44,7 +43,9 @@ def lambda_handler(event, context):
         response = requests.get(search_url, auth=auth, headers=headers)
         data = response.json()
 
+        action_taken = "created"
         if data.get('results'):
+            action_taken = "updated"
             # Page exists, update
             page_id = data['results'][0]['id']
             version = data['results'][0]['version']['number'] + 1
@@ -78,12 +79,15 @@ def lambda_handler(event, context):
                     }
                 }
             }
+            if parent_page_id:
+                payload["ancestors"] = [{"id": str(parent_page_id)}]
             result = requests.post(create_url, data=json.dumps(payload), auth=auth, headers=headers)
-
+            
+        logger.info(f"Output: {result}")
 
         response_body = {
             'TEXT': {
-                'body': f"Page created in space '{space}'."
+                'body': f"Page '{action_taken}' in space '{space}'."
             }
         }
         
