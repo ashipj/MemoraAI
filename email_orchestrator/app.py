@@ -13,9 +13,10 @@ table = dynamodb.Table('EmailStorage')
 
 bedrock_runtime = boto3.client("bedrock-agent-runtime")
 AGENT_ID = "GCUHPGWEWO"
-# AGENT_ALIAS_ID = "60HGQN0VKA" Cloude sonnet
-# AGENT_ALIAS_ID = "9ZSGMXEBKU"  # Nova lite
-AGENT_ALIAS_ID = "A98JF2T472"  # Claude 3.5 Haiku
+# AGENT_ALIAS_ID = "60HGQN0VKA" Cloude sonnet V1
+# AGENT_ALIAS_ID = "9ZSGMXEBKU"  # Nova lite V2
+# AGENT_ALIAS_ID = "A98JF2T472"  # Claude 3.5 Haiku V3
+AGENT_ALIAS_ID = "ZKHCZIFKNG"  # Claude 3.5 Haiku V4
 
 def lambda_handler(event, context):
     logger.info("Starting email thread summarization process.")
