@@ -6,13 +6,14 @@ Globals:
   Function:
     Timeout: 900
     Runtime: python3.11
-    MemorySize: 512
+    MemorySize: 256
 
 Resources:
   ContextIngestionFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: MemoraContextIngestion
+      FunctionName: ConfluenceContentIngestionFunction
+      Description: Ingests content from Confluence and stores it in S3
       Handler: app.lambda_handler
       CodeUri: src/
       Policies:
@@ -27,7 +28,7 @@ Resources:
       Environment:
         Variables:
           S3_BUCKET: memora-ai-ingestion-bucket
-          S3_PREFIX: cleaned-data
+          S3_PREFIX: clean-data
           confluence_base_url: https://ashipj.atlassian.net/wiki
           confluence_email: ashipj@gmail.com
           CONFLUENCE_TOKEN: '{{resolve:secretsmanager:memora/email-confluence-secrets:SecretString:CONFLUENCE_TOKEN}}'

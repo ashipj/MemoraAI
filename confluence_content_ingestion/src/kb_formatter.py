@@ -5,6 +5,8 @@ import logging
 import boto3
 from bs4 import BeautifulSoup
 import tiktoken
+import html
+import re
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -12,6 +14,19 @@ logger.setLevel(logging.INFO)
 s3 = boto3.client("s3")
 enc = tiktoken.encoding_for_model("text-embedding-3-small")
 MAX_TOKENS = 300
+
+def normalize_text(text):
+    text = html.unescape(text)
+    text = text.replace('\u00b7', '-')   # bullet to dash
+    text = text.replace('\u00a0', ' ')   # non-breaking space
+    text = text.replace('\u2013', '-')   # en dash
+    text = text.replace('\u2014', '-')   # em dash
+
+    # Normalize bullet spacing (e.g. "-        Something" → "- Something")
+    text = re.sub(r"-\s+", "- ", text)
+    # text = re.sub(r":\s*", ": ", text)
+
+    return text.strip()
 
 def get_token_count(text):
     return len(enc.encode(text))
@@ -42,7 +57,7 @@ def split_text_by_tokens(text, section_header, base_metadata, chunk_id_base, chu
     return chunks, chunk_counter
 
 def chunk_html_content(page):
-    html = page["text"]
+    html = page["body"]
     metadata = page["metadata"]
     soup = clean_text(html)
     logger.info(f"Processing page - clean_text: {clean_text}")
@@ -56,8 +71,9 @@ def chunk_html_content(page):
     for elem in soup.descendants:
         if elem.name in ["h1", "h2"]:
             if buffer.strip():
+                clean_buffer = normalize_text(buffer.strip())
                 buffer_chunks, chunk_counter = split_text_by_tokens(
-                    buffer.strip(), section_header, metadata, chunk_id_base, chunk_counter
+                    clean_buffer, section_header, metadata, chunk_id_base, chunk_counter
                 )
                 chunks.extend(buffer_chunks)
                 buffer = ""
@@ -69,8 +85,9 @@ def chunk_html_content(page):
             buffer += elem.strip() + " "
 
     if buffer.strip():
+        clean_buffer = normalize_text(buffer.strip())
         buffer_chunks, chunk_counter = split_text_by_tokens(
-            buffer.strip(), section_header, metadata, chunk_id_base, chunk_counter
+            clean_buffer, section_header, metadata, chunk_id_base, chunk_counter
         )
         chunks.extend(buffer_chunks)
 

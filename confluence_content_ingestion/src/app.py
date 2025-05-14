@@ -19,8 +19,9 @@ def lambda_handler(event, context):
     logger.info(f"S3 bucket: {s3_bucket}")
     logger.info(f"S3 prefix: {s3_prefix}")
     logger.info(f"Confluence email: {confluence_email}")
+    # logger.info(f"Confluence token: {confluence_token}")
 
-    pages = get_all_pages(confluence_base_url, confluence_email, confluence_token)
+    pages = get_all_pages(confluence_base_url, confluence_email.strip(), confluence_token.strip())
     chunk_and_store(pages, s3_bucket, s3_prefix)
 
     return {
