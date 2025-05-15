@@ -9,30 +9,6 @@ Globals:
     MemorySize: 512
 
 Resources:
-  ContextIngestionFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: MemoraContextIngestion
-      Handler: app.lambda_handler
-      CodeUri: context_ingestion/
-      Policies:
-        - AWSLambdaBasicExecutionRole
-        - S3WritePolicy:
-            BucketName: memora-ai-ingestion-bucket
-        - Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Action: secretsmanager:GetSecretValue
-              Resource: arn:aws:secretsmanager:us-east-1:685148108183:secret:memora/*
-      Environment:
-        Variables:
-          S3_BUCKET: memora-ai-ingestion-bucket
-          S3_PREFIX: cleaned-data
-          confluence_base_url: https://ashipj.atlassian.net/wiki
-          confluence_email: ashipj@gmail.com
-          CONFLUENCE_TOKEN: '{{resolve:secretsmanager:memora/email-confluence-secrets:SecretString:CONFLUENCE_TOKEN}}'
-
-
   ConfluenceWriterFunction:
     Type: AWS::Serverless::Function
     Properties:
