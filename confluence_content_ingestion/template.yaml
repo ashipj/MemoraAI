@@ -12,7 +12,7 @@ Resources:
   ContextIngestionFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: ConfluenceContentIngestionFunction
+      FunctionName: MemoraAI-ConfluenceContentIngestionFunction
       Description: Ingests content from Confluence and stores it in S3
       Handler: app.lambda_handler
       CodeUri: src/
