@@ -17,7 +17,7 @@ def get_all_pages(base_url, email, token):
 
     while True:
         # Fetch pages from Confluence API
-        url = f"{base_url}/rest/api/content?limit=25&start={start}&expand=body.storage"
+        url = f"{base_url}/rest/api/content?limit=25&start={start}&expand=body.storage,ancestors"
         logger.info(f"Auth {auth}, headers: {headers}, url: {url}")
         response = requests.get(url, auth=auth, headers=headers)
         data = response.json()
@@ -29,12 +29,22 @@ def get_all_pages(base_url, email, token):
 
         for page in results:
             logger.info(f"Processing page: {page['title']}")
+            ancestors = page.get("ancestors", [])
+            if ancestors:
+                immediate_parent = ancestors[-1]
+                parent_page_id = immediate_parent.get("id")
+                parent_page_title = immediate_parent.get("title")
+            else:
+                parent_page_id = None
+                parent_page_title = None
             pages.append({
                 "body": page["body"]["storage"]["value"],
                 "metadata": {
                     "title": page["title"],
                     "page_id": page["id"],
-                    "url": f"{base_url}/pages/viewpage.action?pageId={page['id']}"
+                    "url": f"{base_url}/pages/viewpage.action?pageId={page['id']}",
+                    "parent_page_id": parent_page_id,
+                    "parent_page_title": parent_page_title
                 }
             })
 

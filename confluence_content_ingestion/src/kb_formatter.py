@@ -21,11 +21,7 @@ def normalize_text(text):
     text = text.replace('\u00a0', ' ')   # non-breaking space
     text = text.replace('\u2013', '-')   # en dash
     text = text.replace('\u2014', '-')   # em dash
-
-    # Normalize bullet spacing (e.g. "-        Something" → "- Something")
     text = re.sub(r"-\s+", "- ", text)
-    # text = re.sub(r":\s*", ": ", text)
-
     return text.strip()
 
 def get_token_count(text):
@@ -43,13 +39,17 @@ def split_text_by_tokens(text, section_header, base_metadata, chunk_id_base, chu
         sub_text = enc.decode(sub_tokens)
         chunk_id = f"{chunk_id_base}-{chunk_counter:03d}"
         chunk = {
-            "chunkId": chunk_id,
-            "pageId": base_metadata["page_id"],
-            "pageTitle": base_metadata["title"],
-            "sectionHeader": section_header,
             "content": sub_text,
-            "tokenCount": len(sub_tokens),
-            "url": base_metadata["url"]
+            "metadata": {
+                "chunkId": chunk_id,
+                "pageId": base_metadata["page_id"],
+                "pageTitle": base_metadata["title"],
+                "sectionHeader": section_header,
+                "tokenCount": len(sub_tokens),
+                "url": base_metadata["url"],
+                "parentPageId": base_metadata.get("parent_page_id"),
+                "parentPageTitle": base_metadata.get("parent_page_title")
+            }
         }
         chunks.append(chunk)
         i += MAX_TOKENS
@@ -57,10 +57,10 @@ def split_text_by_tokens(text, section_header, base_metadata, chunk_id_base, chu
     return chunks, chunk_counter
 
 def chunk_html_content(page):
-    html = page["body"]
+    html_content = page["body"]
     metadata = page["metadata"]
-    soup = clean_text(html)
-    logger.info(f"Processing page - clean_text: {clean_text}")
+    soup = clean_text(html_content)
+    logger.info(f"Processing page: {metadata['title']} | Parent: {metadata.get('parent_page_title')} ({metadata.get('parent_page_id')})")
 
     chunks = []
     chunk_counter = 1
@@ -90,6 +90,26 @@ def chunk_html_content(page):
             clean_buffer, section_header, metadata, chunk_id_base, chunk_counter
         )
         chunks.extend(buffer_chunks)
+
+    # Add full template as a single chunk for holistic retrieval for templates
+    if metadata.get("parent_page_title") == "Templates":
+        full_text = str(soup)
+        logger.info(f"Full template text: {full_text}")
+        # full_text = normalize_text(soup.get_text(separator=" ").strip())
+        full_chunk = {
+            "content": full_text,
+            "metadata": {
+                "chunkId": f"{chunk_id_base}-full",
+                "pageId": metadata["page_id"],
+                "pageTitle": metadata["title"],
+                "sectionHeader": "FULL_PAGE",
+                "tokenCount": get_token_count(full_text),
+                "url": metadata["url"],
+                "parentPageId": metadata.get("parent_page_id"),
+                "parentPageTitle": metadata.get("parent_page_title")
+            }
+        }
+        chunks.append(full_chunk)
 
     return chunks
 
