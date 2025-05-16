@@ -83,11 +83,13 @@ def lambda_handler(event, context):
                 payload["ancestors"] = [{"id": str(parent_page_id)}]
             result = requests.post(create_url, data=json.dumps(payload), auth=auth, headers=headers)
             
-        logger.info(f"Output: {result}")
+        logger.info(f"Output: {result.json()}")
+        new_page_url = f"{CONFLUENCE_URL}/spaces/{space}/pages/{result.json().get('id')}"
+        logger.info(f"New page URL: {new_page_url}")
 
         response_body = {
             'TEXT': {
-                'body': f"Page '{action_taken}' in space '{space}'."
+                'body': f"Page with title '{title}' was {action_taken} at url {new_page_url}."
             }
         }
         
