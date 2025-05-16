@@ -1,114 +1,72 @@
-# 🧠 Memora AI
+Memora AI
 
-Memora AI is an AI-powered assistant that automatically extracts key decisions, design changes, and action points from email conversations and updates your project documentation—such as Confluence pages—without manual intervention.
+Memora AI is an agentic, serverless AI system that automatically processes Gmail conversations related to projects, classifies the content, summarizes it, and updates relevant Confluence pages. The system is designed for teams that want to keep documentation current with minimal manual effort.
 
----
+Key Features
 
-## 🚀 Features
+🧠 Agentic Intelligence: Powered by AWS Bedrock agents using Claude 3.5 Haiku, it performs task chaining such as classification, summarization, and documentation.
 
-- ⛅ **Serverless Architecture** using AWS Lambda & SAM
-- 📧 **Email Ingestion** via Microsoft Outlook integration
-- 🔍 **Semantic Understanding** using Amazon Bedrock (Claude / Titan)
-- 🧠 **RAG Framework** to extract decisions & context
-- 🗃️ **DynamoDB Storage** for short-term memory
-- 📝 **Confluence API Integration** to update pages automatically
-- 📈 **Tracing & Observability** using AWS X-Ray and OpenTelemetry (ADOT)
+📥 Email Integration: Ingests emails from Gmail using the Gmail API.
 
----
+🧾 Content Relevance & Classification: The agent identifies if a thread is relevant to a project. If it is, classifies it as BRD, Release Notes, Action Items, or Other.
 
-## 📁 Project Structure
+📝 Confluence Updater: Formats summaries based on matching templates  and creates new confluence pages under the relavent Confluence pages.
 
-```
-memora-ai/
-├── sam-template.yaml           # AWS SAM template for deploying infrastructure
-├── email-reader/              # Lambda to read emails and store in DynamoDB
-│   ├── app.js                 # Email fetcher logic using MS Graph API
-│   └── utils.js               # Outlook auth and helper methods
-├── decision-extractor/        # Lambda for extracting key decisions from email body
-│   └── handler.js             # Claude prompt + RAG implementation
-├── confluence-updater/        # Lambda to update Confluence pages
-│   └── index.js               # REST API integration with Confluence
-├── tracing/                   # OpenTelemetry setup
-│   └── otel-config.js
-├── scripts/                   # Utility scripts for local testing and data import
-└── README.md                  # You are here
-```
+📚 Knowledge Base (KB): Uses Confluence content and project-specific rules for contextual decision-making. Uses AWS Bedrock KB with Aurora serverless.
 
----
+🛠 Fully Serverless and Infrastructure as Code (IaC) : Built using AWS SAM, with Lambda, DynamoDB, Aurora, S3, and Bedrock.
 
-## 🛠️ Deployment
+Architecture Overview
 
-> This project uses **AWS SAM CLI** for deployment.
+Gmail → Email Reader Lambda → DynamoDB → Email Orchestrator Lambda
+                                            ↓
+                                     Bedrock Agent ←→ Aurora DB (RAG Vector store)
+                                            ↓
+                               confluence-writer-function → Confluence Cloud
 
-### Prerequisites
+Repository Structure
 
-- AWS CLI configured (`aws configure`)
-- AWS SAM CLI installed
-- Microsoft Azure App Registration for Outlook access
-- Confluence API token
+MemoraAI/
+├── confluence_content_ingestion/ # Lambda: Pushes KB content to S3
+│   ├── src/
+│   └── template.yaml
+├── memora_core/                  # Core logic: RAG engine, Bedrock clients, utilities
+│   └── email_reader/
+|   └── email_orchestrator/
+|   └── lambda_confluence_writer/
+│   └── template.yaml
+├── .gitignore                    # Specifies files to ignore in version control
+└── README.md                     # Project documentation
 
-### Deploy Steps
+Deployment
 
-```bash
-git clone https://github.com/ashipj/MemoraAI.git
-cd MemoraAI
+Make sure you have AWS SAM CLI installed and configured.
+
 sam build
 sam deploy --guided
-```
 
----
+memora_core and confluence_content_ingestion are to be deployed independently.
 
-## 🔐 Environment Variables
+Environment Variables
 
-Each Lambda expects these values via environment variables (defined in `sam-template.yaml`):
+Each Lambda expects certain environment variables like :
 
-### `email-reader`
-- `OUTLOOK_CLIENT_ID`
-- `OUTLOOK_CLIENT_SECRET`
-- `OUTLOOK_TENANT_ID`
-- `EMAIL_FOLDER_NAME` (e.g., Inbox)
-- `DYNAMODB_TABLE_NAME`
+DDB_TABLE_NAME
 
-### `decision-extractor`
-- `BEDROCK_MODEL_ID` (e.g., `anthropic.claude-v2`)
-- `DYNAMODB_TABLE_NAME`
+CONFLUENCE_TOKEN_SECRET
 
-### `confluence-updater`
-- `CONFLUENCE_API_TOKEN`
-- `CONFLUENCE_BASE_URL`
-- `CONFLUENCE_PAGE_ID`
+GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, etc.
 
----
+KB_ID, BEDROCK_AGENT_ID, etc.
 
-## 🧪 Local Testing
+AURORA_CONNECTION_STRING
 
-Use `sam local invoke` to test individual functions with sample events.
+Contributors
 
-```bash
-sam local invoke EmailReaderFunction --event events/sample-email.json
-```
+Ashish Palamkunnel Joseph
 
----
+Anju Sebastian
 
-## 📊 Tracing & Observability
+License
 
-Integrated with AWS X-Ray and OpenTelemetry (ADOT). All Lambda invocations are traced end-to-end.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please fork the repo and submit a pull request with a clear description of your changes.
-
----
-
-## 👥 Contributors
-
-- Ashish Joseph
-- Anju Joseph
-
----
-
-## 📄 License
-
-MIT License © 2025 Ashish Joseph
+This project is licensed under the MIT License.
