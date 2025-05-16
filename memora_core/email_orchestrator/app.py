@@ -1,6 +1,7 @@
 import json
 import boto3
 import logging
+import random
 from boto3.dynamodb.conditions import Attr, Key
 from datetime import datetime
 
@@ -16,7 +17,9 @@ AGENT_ID = "GCUHPGWEWO"
 # AGENT_ALIAS_ID = "60HGQN0VKA" Cloude sonnet V1
 # AGENT_ALIAS_ID = "9ZSGMXEBKU"  # Nova lite V2
 # AGENT_ALIAS_ID = "A98JF2T472"  # Claude 3.5 Haiku V3
-AGENT_ALIAS_ID = "ZKHCZIFKNG"  # Claude 3.5 Haiku V4
+# AGENT_ALIAS_ID = "ZKHCZIFKNG"  # Claude 3.5 Haiku V4
+AGENT_ALIAS_ID = "NEUAEZJMGO"  # Claude 3.5 Haiku V5
+
 
 def lambda_handler(event, context):
     logger.info("Starting email thread summarization process.")
@@ -77,14 +80,13 @@ def get_emails_by_thread(thread_id):
 
 def invoke_bedrock_agent(email_thread_text):
     try:
-        logger.info("Invoking Bedrock agent...")
+        sessionID = f"email-thread-{random.randint(100, 999)}"
+        logger.info(f"Invoking Bedrock agent with session ID: {sessionID}")
         response = bedrock_runtime.invoke_agent(
             agentId=AGENT_ID,
             agentAliasId=AGENT_ALIAS_ID,
-            sessionId="email-session",
+            sessionId=sessionID,
             inputText=(
-                f"Here is an email thread. Identify if this is relevant to any known project. "
-                f"If relevant, summarize it in a document-style format and update the Confluence page.\n\n"
                 f"{email_thread_text}"
             )
         )
