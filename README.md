@@ -13,6 +13,10 @@
 
 ## Architecture Overview
 
+![memora-ai-architecture-1](https://github.com/user-attachments/assets/24146825-bd1b-4b50-a739-47d799149d14)
+
+
+
 ```plaintext
 Gmail → Email Reader Lambda → DynamoDB → Email Orchestrator Lambda
                                             ↓
