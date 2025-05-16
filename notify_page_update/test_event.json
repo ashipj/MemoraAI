@@ -1,0 +1,9 @@
+{
+  "input": {
+    "topicName": "memora-notify-topic",
+    "pageTitle": "InstaCart v2.0.0 Release Notes",
+    "pageId": "123456",
+    "url": "https://confluence.example.com/pages/viewpage.action?pageId=123456",
+    "email": "user@example.com"
+  }
+}

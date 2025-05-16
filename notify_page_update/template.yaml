@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Memora AI - Notifies users of page updates
+
+Resources:
+  CreateMemoraSNSTopicFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: Memora-NotifyPageUpdate
+      Handler: app.lambda_handler
+      Runtime: python3.11
+      Timeout: 120
+      MemorySize: 128
+      CodeUri: src/
+      Policies:
+        - arn:aws:iam::aws:policy/AmazonSNSFullAccess
+        - AWSLambdaBasicExecutionRole
+

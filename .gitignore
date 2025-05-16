@@ -1,2 +1,3 @@
 confluence_content_ingestion/.aws-sam/
 memora_core/.aws-sam/
+notify_page_update/.aws-sam/
