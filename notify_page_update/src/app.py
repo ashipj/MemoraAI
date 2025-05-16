@@ -8,7 +8,7 @@ def lambda_handler(event, context):
     else:
         input_data = event
 
-    topic_name = input_data.get("topicName", "memora-notify-topic")
+    topic_name = "memora-notify-topic"
     page_title = input_data.get("pageTitle", "Untitled Page")
     page_id = input_data.get("pageId", "unknown")
     page_url = input_data.get("url", "")
